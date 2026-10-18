@@ -1,0 +1,18 @@
+- name: Test create notification
+  run: |
+    USER_RESPONSE=$(curl --fail --silent --show-error \
+      -X POST http://localhost:8080/users \
+      -H "Content-Type: application/json" \
+      -d '{"name":"Notification Test User"}')
+
+    USER_ID=$(echo "$USER_RESPONSE" | jq -er '.id')
+
+    NOTIFICATION_RESPONSE=$(curl --fail --silent --show-error \
+      -X POST http://localhost:8080/notifications \
+      -H "Content-Type: application/json" \
+      -d "{\"user_id\":$USER_ID,\"title\":\"CI Test\",\"body\":\"Test notification from GitHub Actions\"}")
+
+    echo "$NOTIFICATION_RESPONSE"
+    echo "$NOTIFICATION_RESPONSE" | jq -e \
+      --argjson user_id "$USER_ID" \
+      '.user_id == $user_id and .title == "CI Test"'
