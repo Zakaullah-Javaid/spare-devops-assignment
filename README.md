@@ -1,59 +1,70 @@
 # DevOps Assignment — Starter API
 
-This is the **starter repository** for the Spare Junior DevOps take-home assignment.
+A Node.js and Express API with PostgreSQL, containerized using Docker and Docker Compose.
 
-Your task is **not** to rewrite this application. Instead, containerize it, run it locally with Docker Compose, add CI/CD, and write operational scripts. See the full assignment brief for details.
+## What's Included
 
-## What's included
-
-A minimal Node.js + Express API backed by PostgreSQL:
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check (includes DB connectivity) |
-| GET | `/users` | List all users |
-| POST | `/users` | Create a user (`{ "name": "Alice" }`) |
-| GET | `/notifications?user_id=<id>` | List notifications for a user |
-| POST | `/notifications` | Create a notification |
+- `Dockerfile` — Builds the API image.
+- `docker-compose.yml` — Runs the API and PostgreSQL.
+- `.github/workflows/ci.yml` — Builds, tests, and publishes the Docker image.
+- `scripts/ops.sh` — Provides commands to manage and test the application.
 
 ## Prerequisites
 
-- Node.js 18+
-- PostgreSQL running locally (for native development only)
+- Docker Desktop or Docker Engine
+- Docker Compose
+- Bash (WSL2 Ubuntu on Windows)
 
-## Run locally (without Docker)
+## Run the Application
 
-Candidates are expected to **Dockerize** this app as part of the assignment. These steps are for verifying the starter code before you begin:
+Start the application:
 
 ```bash
-cp .env.example .env
-npm install
-npm start
+docker compose up -d --build
 ```
 
-Example requests:
+Check service status:
+
+```bash
+docker compose ps
+```
+
+Check API health:
 
 ```bash
 curl http://localhost:8080/health
-curl -X POST http://localhost:8080/users -H "Content-Type: application/json" -d '{"name":"Alice"}'
-curl http://localhost:8080/users
-curl -X POST http://localhost:8080/notifications \
-  -H "Content-Type: application/json" \
-  -d '{"user_id":1,"title":"Hello","body":"Welcome!","channel":"in_app"}'
-curl "http://localhost:8080/notifications?user_id=1"
 ```
 
-## Environment variables
+## Operations Script
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | HTTP port | `8080` |
-| `DB_HOST` | PostgreSQL host | `localhost` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | Database name | `notifications` |
-| `DB_USER` | Database user | `app` |
-| `DB_PASSWORD` | Database password | `app` |
+Run these commands from the project root:
 
-## What you submit
+```bash
+./scripts/ops.sh up
+./scripts/ops.sh status
+./scripts/ops.sh logs
+./scripts/ops.sh smoke
+./scripts/ops.sh down
+```
 
-Create **your own** GitHub repository, push your solution there (Dockerfile, Compose, CI, scripts), and share that link with us.
+## API Endpoints
+
+| Method | Endpoint                   | Description                   |
+| ------ | -------------------------- | ----------------------------- |
+| GET    | `/health`                  | Check API and database health |
+| GET    | `/users`                   | List users                    |
+| POST   | `/users`                   | Create a user                 |
+| GET    | `/notifications?user_id=1` | List user notifications       |
+| POST   | `/notifications`           | Create a notification         |
+
+## CI/CD
+
+GitHub Actions runs on pull requests and pushes to `main`. It builds the API image, starts the services, runs smoke tests, and cleans up the test environment.
+
+On successful pushes to `main`, the workflow publishes the API image to GitHub Container Registry (GHCR), tagged with `latest` and the full commit SHA.
+
+## Database
+
+PostgreSQL data is stored in a named Docker volume and persists when the stack is stopped with `docker compose down`.
+
+The default database password is for local assignment testing only. Do not use it in production.
